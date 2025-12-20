@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.api.router import api_router
-from backend.app.core.config import settings
+from backend.app.core.config import settings, validate_settings
 from backend.app.db import init_db
 from backend.app.storage.notebooks import ensure_storage_root
 
@@ -19,6 +19,7 @@ def _parse_cors(origins: str) -> list[str]:
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    validate_settings()
     ensure_storage_root()
     init_db()
     yield
@@ -45,5 +46,12 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-app.include_router(api_router)
+@app.get("/ready")
+def ready() -> dict[str, str]:
+    # If the app imports successfully and DB init ran at startup,
+    # this is typically sufficient for local/docker deployments.
+    return {"status": "ready"}
+
+
+app.include_router(api_router, prefix=settings.API_PREFIX)
 

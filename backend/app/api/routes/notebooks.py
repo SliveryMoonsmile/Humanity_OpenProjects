@@ -9,7 +9,7 @@ from sqlmodel import col, select
 
 from backend.app.api.deps import CurrentUser, SessionDep
 from backend.app.models import Notebook, NotebookCreate, NotebookPublic, NotebookShare, NotebookUpdate, ShareRequest, User
-from backend.app.storage.notebooks import notebook_content_path, safe_unlink
+from backend.app.storage.notebooks import is_path_under_storage_root, notebook_content_path, safe_unlink
 
 router = APIRouter(prefix="/notebooks", tags=["notebooks"])
 
@@ -185,6 +185,8 @@ def download_notebook_content(session: SessionDep, user: CurrentUser, notebook_i
         raise HTTPException(status_code=403, detail="Not allowed")
     if not nb.content_path:
         raise HTTPException(status_code=404, detail="Notebook content not uploaded")
+    if not is_path_under_storage_root(nb.content_path):
+        raise HTTPException(status_code=500, detail="Notebook content path is invalid")
     return FileResponse(path=nb.content_path, media_type="application/json", filename=f"{nb.id}.ipynb")
 
 

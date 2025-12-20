@@ -10,8 +10,9 @@ from sqlmodel import Session, select
 from backend.app.core.security import decode_token
 from backend.app.db import engine
 from backend.app.models import User
+from backend.app.core.config import settings
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_PREFIX}/auth/token")
 
 
 def get_session() -> Generator[Session, None, None]:

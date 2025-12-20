@@ -22,6 +22,12 @@ def notebook_content_path(*, owner_id: str, notebook_id: str) -> str:
     return str(p)
 
 
+def is_path_under_storage_root(path: str) -> bool:
+    root = Path(settings.NOTEBOOK_STORAGE_DIR).resolve()
+    p = Path(path).resolve()
+    return p == root or root in p.parents
+
+
 def safe_unlink(path: str | None) -> None:
     if not path:
         return

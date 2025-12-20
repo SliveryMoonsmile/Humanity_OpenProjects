@@ -7,6 +7,9 @@ from sqlmodel import Session, SQLModel, create_engine
 
 from backend.app.core.config import settings
 
+# Ensure model tables are registered with SQLModel.metadata before create_all().
+from backend.app import models as _models  # noqa: F401
+
 
 def _normalize_db_url(url: str) -> str:
     # Ensure sqlite file paths are usable regardless of current working directory.

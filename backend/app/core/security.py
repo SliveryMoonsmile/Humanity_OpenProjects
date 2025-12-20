@@ -17,7 +17,11 @@ def hash_password(password: str) -> str:
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        return pwd_context.verify(plain_password, hashed_password)
+    except Exception:
+        # If a legacy hash exists (or the stored value is corrupted), treat as invalid.
+        return False
 
 
 def create_access_token(*, subject: str, expires_minutes: int | None = None) -> str:
