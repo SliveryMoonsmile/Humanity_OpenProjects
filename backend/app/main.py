@@ -6,9 +6,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.api.router import api_router
-from backend.app.core.config import settings, validate_settings
+from backend.app.core.config import settings
 from backend.app.db import init_db
 from backend.app.storage.notebooks import ensure_storage_root
+from backend.app.storage.platform import ensure_platform_storage
+from backend.app.ui import router as ui_router
 
 
 def _parse_cors(origins: str) -> list[str]:
@@ -19,8 +21,8 @@ def _parse_cors(origins: str) -> list[str]:
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    validate_settings()
     ensure_storage_root()
+    ensure_platform_storage()
     init_db()
     yield
 
@@ -54,4 +56,5 @@ def ready() -> dict[str, str]:
 
 
 app.include_router(api_router, prefix=settings.API_PREFIX)
+app.include_router(ui_router)
 

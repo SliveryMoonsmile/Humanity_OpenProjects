@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+  <div>
+    <div class="muted"><a href="/ui">← back</a></div>
+    <h2>{{ category.name }}</h2>
+    {% if category.description %}<p class="muted">{{ category.description }}</p>{% endif %}
+  </div>
+
+  <h3>Items</h3>
+  {% for i in items %}
+    <div class="card">
+      <div>
+        <strong><a href="/ui/i/{{ i.id }}">{{ i.title }}</a></strong>
+        <span class="muted">({{ i.type }} • {{ i.slug }})</span>
+      </div>
+      {% if i.summary %}<div class="muted">{{ i.summary }}</div>{% endif %}
+    </div>
+  {% else %}
+    <div class="card">
+      <div><strong>No items yet</strong></div>
+      <div class="muted">POST to <code>/api/v1/content/items</code> to create one.</div>
+    </div>
+  {% endfor %}
+{% endblock %}
+

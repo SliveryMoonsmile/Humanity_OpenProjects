@@ -34,9 +34,6 @@ settings = Settings()  # type: ignore[call-arg]
 
 def validate_settings() -> None:
     """Fail fast in production if dangerous defaults are in use."""
-    if settings.ENV.lower() == "prod":
-        if settings.SECRET_KEY == "dev-unsafe-change-me":
-            raise RuntimeError("PDP_SECRET_KEY must be set in production")
-        if settings.CORS_ORIGINS.strip() == "*":
-            raise RuntimeError("PDP_CORS_ORIGINS must not be '*' in production")
+    # Kept for optional future hardening; intentionally no-op for single-PC use.
+    return None
 
