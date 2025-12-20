@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>Categories</h2>
+  <p class="muted">Create categories via the API, then browse content here.</p>
+  {% for c in categories %}
+    <div class="card">
+      <div><strong><a href="/ui/c/{{ c.slug }}">{{ c.name }}</a></strong> <span class="muted">({{ c.slug }})</span></div>
+      {% if c.description %}<div class="muted">{{ c.description }}</div>{% endif %}
+    </div>
+  {% else %}
+    <div class="card">
+      <div><strong>No categories yet</strong></div>
+      <div class="muted">POST to <code>/api/v1/content/categories</code> to create one.</div>
+    </div>
+  {% endfor %}
+{% endblock %}
+

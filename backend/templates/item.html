@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="muted"><a href="/ui">← back</a></div>
+  <h2>{{ item.title }}</h2>
+  <div class="muted">{{ item.type }} • {{ item.slug }}</div>
+  {% if item.summary %}<p class="muted">{{ item.summary }}</p>{% endif %}
+
+  {% if item.type == "page" %}
+    <div class="card">
+      <div>{{ page_html | safe }}</div>
+    </div>
+  {% elif item.type == "video" %}
+    <div class="card">
+      <video controls style="width: 100%; max-height: 70vh;">
+        <source src="/api/v1/media/items/{{ item.id }}/stream" type="{{ item.mime_type or 'video/mp4' }}">
+      </video>
+      <div style="margin-top: 8px;">
+        <a href="/api/v1/media/items/{{ item.id }}/download">Download</a>
+      </div>
+    </div>
+  {% elif item.type == "file" %}
+    <div class="card">
+      <div><a href="/api/v1/media/items/{{ item.id }}/download">Download file</a></div>
+    </div>
+  {% elif item.type == "script" %}
+    <div class="card">
+      <div class="muted">Runtime: <code>{{ item.script_runtime }}</code></div>
+      <pre><code>{{ item.script_source }}</code></pre>
+      <div class="muted">Run it via <code>POST /api/v1/scripts/items/{{ item.id }}/runs</code></div>
+    </div>
+  {% endif %}
+{% endblock %}
+
