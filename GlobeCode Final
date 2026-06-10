@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Citizen Science Globe</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+```
+    #container {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+    }
+    
+    #ui-panel {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        z-index: 100;
+        max-width: 300px;
+    }
+    
+    #info-panel {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 15px;
+        border-radius: 10px;
+        z-index: 100;
+        display: none;
+    }
+    
+    #add-data-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 200;
+    }
+    
+    #add-data-form {
+        background: #1a1a1a;
+        color: white;
+        padding: 30px;
+        border-radius: 15px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    
+    .form-group {
+        margin: 15px 0;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+    
+    .form-group input, .form-group select, .form-group textarea {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #444;
+        border-radius: 5px;
+        background: #333;
+        color: white;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+    
+    .form-group textarea {
+        height: 80px;
+        resize: vertical;
+    }
+    
+    .form-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 20px;
+    }
+    
+    .button-secondary {
+        background: #666;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    
+    .button-secondary:hover {
+        background: #555;
+    }
+    
+    .button {
+        background: #0066cc;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+        font-size: 14px;
+    }
+    
+    .button:hover {
+        background: #0052a3;
+    }
+    
+    .controls {
+        margin: 10px 0;
+    }
+    
+    label {
+        display: block;
+        margin: 5px 0;
+        font-size: 12px;
+    }
+    
+    input[type="range"] {
+        width: 100%;
+    }
+    
+    #stats {
+        font-size: 12px;
+        color: #ccc;
+        margin-top: 10px;
+    }
+</style>
+```
+
+</head>
+<body>
+    <div id="container">
+        <div id="ui-panel">
+            <h3>Citizen Science Globe</h3>
+            <div class="controls">
+                <button class="button" onclick="showAddDataModal()">Add Data Point</button>
+                <button class="button" onclick="addRandomDatapoint()">Add Random Point</button>
+                <button class="button" onclick="clearDatapoints()">Clear All</button>
+                <button class="button" onclick="toggleAutoRotate()">Toggle Rotation</button>
+            </div>
+            <div class="controls">
+                <label>Point Size: <span id="sizeValue">1.0</span></label>
+                <input type="range" id="pointSize" min="0.5" max="3.0" step="0.1" value="1.0">
+
+```
+            <label>Globe Speed: <span id="speedValue">1.0</span></label>
+            <input type="range" id="rotationSpeed" min="0" max="3" step="0.1" value="1.0">
+        </div>
+        <div id="stats">
+            <div>Data Points: <span id="pointCount">0</span></div>
+            <div>Click points for details</div>
+        </div>
+    </div>
+    
+    <div id="info-panel">
+        <div id="pointInfo"></div>
+    </div>
+    
+    <div id="add-data-modal">
+        <div id="add-data-form">
+            <h3>Add Data Point</h3>
+            <div class="form-group">
+                <label for="data-lat">Latitude (-90 to 90):</label>
+                <input type="number" id="data-lat" min="-90" max="90" step="0.0001" value="40.7128">
+            </div>
+            <div class="form-group">
+                <label for="data-lng">Longitude (-180 to 180):</label>
+                <input type="number" id="data-lng" min="-180" max="180" step="0.0001" value="-74.0060">
+            </div>
+            <div class="form-group">
+                <label for="data-type">Data Type:</label>
+                <select id="data-type">
+                    <option value="0">Bird Sighting</option>
+                    <option value="1">Water Quality</option>
+                    <option value="2">Air Quality</option>
+                    <option value="3">Plant Species</option>
+                    <option value="4">Weather Station</option>
+                    <option value="5">Light Pollution</option>
+                    <option value="6">Noise Level</option>
+                    <option value="7">Marine Life</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="data-value">Measurement Value:</label>
+                <input type="number" id="data-value" step="0.01" value="50">
+            </div>
+            <div class="form-group">
+                <label for="data-description">Description:</label>
+                <textarea id="data-description" placeholder="Enter observation details..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="researcher-name">Researcher Name:</label>
+                <input type="text" id="researcher-name" placeholder="Your name">
+            </div>
+            <div class="form-buttons">
+                <button class="button-secondary" onclick="hideAddDataModal()">Cancel</button>
+                <button class="button" onclick="submitDataPoint()">Add Point</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+    // Global variables
+    let scene, camera, renderer, globe, globeGroup, dataPoints = [], raycaster, mouse;
+    let autoRotate = true;
+    let rotationSpeed = 0.005;
+    
+    // Sample citizen science data types
+    const dataTypes = [
+        { name: 'Bird Sighting', color: 0x00ff00, category: 'Wildlife' },
+        { name: 'Water Quality', color: 0x0066ff, category: 'Environment' },
+        { name: 'Air Quality', color: 0xff6600, category: 'Environment' },
+        { name: 'Plant Species', color: 0x00ff66, category: 'Botany' },
+        { name: 'Weather Station', color: 0xffff00, category: 'Climate' },
+        { name: 'Light Pollution', color: 0xff00ff, category: 'Astronomy' },
+        { name: 'Noise Level', color: 0xff3300, category: 'Urban' },
+        { name: 'Marine Life', color: 0x0099ff, category: 'Ocean' }
+    ];
+    
+    init();
+    animate();
+    
+    function init() {
+        // Scene setup
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x000011);
+        
+        // Camera setup
+        camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 3;
+        
+        // Renderer setup
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.getElementById('container').appendChild(renderer.domElement);
+        
+        // Create globe
+        createGlobe();
+        
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
+        scene.add(ambientLight);
+        
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(1, 1, 0.5);
+        directionalLight.castShadow = true;
+        scene.add(directionalLight);
+        
+        // Mouse controls
+        raycaster = new THREE.Raycaster();
+        mouse = new THREE.Vector2();
+        
+        // Event listeners
+        window.addEventListener('resize', onWindowResize);
+        renderer.domElement.addEventListener('click', onMouseClick);
+        renderer.domElement.addEventListener('mousemove', onMouseMove);
+        
+        // UI controls
+        document.getElementById('pointSize').addEventListener('input', updatePointSize);
+        document.getElementById('rotationSpeed').addEventListener('input', updateRotationSpeed);
+        
+        // Add some initial sample data
+        addSampleData();
+    }
+    
+    function createGlobe() {
+        // Create a group to hold both globe and datapoints
+        globeGroup = new THREE.Group();
+        scene.add(globeGroup);
+        
+        const geometry = new THREE.SphereGeometry(1, 64, 64);
+        
+        // For high-resolution Earth texture, replace this section with:
+        // const textureLoader = new THREE.TextureLoader();
+        // const texture = textureLoader.load('path/to/your/earth-texture.jpg');
+        // Recommended sources:
+        // - NASA Blue Marble: https://visibleearth.nasa.gov/collection/1484/blue-marble
+        // - Natural Earth: https://www.naturalearthdata.com/downloads/10m-raster-data/
+        // - Example URL: 'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg'
+        
+        // Create a procedural Earth-like texture (remove this when using real texture)
+        const canvas = document.createElement('canvas');
+        canvas.width = 2048;
+        canvas.height = 1024;
+        const ctx = canvas.getContext('2d');
+        
+        // Create base earth colors
+        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        gradient.addColorStop(0, '#87CEEB'); // Sky blue (polar)
+        gradient.addColorStop(0.3, '#228B22'); // Forest green
+        gradient.addColorStop(0.5, '#DEB887'); // Desert tan
+        gradient.addColorStop(0.7, '#228B22'); // Forest green
+        gradient.addColorStop(1, '#87CEEB'); // Sky blue (polar)
+        
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Add some landmass-like shapes
+        ctx.fillStyle = '#8B4513';
+        for (let i = 0; i < 50; i++) {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height;
+            const size = Math.random() * 100 + 20;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Add ocean areas
+        ctx.fillStyle = '#4682B4';
+        for (let i = 0; i < 30; i++) {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height;
+            const size = Math.random() * 150 + 50;
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        const texture = new THREE.CanvasTexture(canvas);
+        // End of procedural texture section
+        
+        const material = new THREE.MeshPhongMaterial({
+            map: texture,
+            shininess: 0.1
+        });
+        
+        globe = new THREE.Mesh(geometry, material);
+        globeGroup.add(globe);
+    }
+    
+    function addDataPoint(lat, lng, dataType, value, description, researcherName = '') {
+        const phi = (90 - lat) * (Math.PI / 180);
+        const theta = (lng + 180) * (Math.PI / 180);
+        
+        const x = -(Math.sin(phi) * Math.cos(theta));
+        const z = Math.sin(phi) * Math.sin(theta);
+        const y = Math.cos(phi);
+        
+        // Scale to globe surface
+        const radius = 1.02;
+        const position = new THREE.Vector3(x * radius, y * radius, z * radius);
+        
+        // Create point geometry
+        const geometry = new THREE.SphereGeometry(0.01, 8, 8);
+        const material = new THREE.MeshPhongMaterial({
+            color: dataType.color,
+            emissive: dataType.color,
+            emissiveIntensity: 0.3
+        });
+        
+        const point = new THREE.Mesh(geometry, material);
+        point.position.copy(position);
+        
+        // Store metadata
+        point.userData = {
+            lat: lat,
+            lng: lng,
+            dataType: dataType,
+            value: value,
+            description: description,
+            researcherName: researcherName,
+            timestamp: new Date()
+        };
+        
+        // Add to globe group so it rotates with the globe
+        globeGroup.add(point);
+        dataPoints.push(point);
+        
+        // Update UI
+        document.getElementById('pointCount').textContent = dataPoints.length;
+    }
+    
+    function addRandomDatapoint() {
+        const lat = (Math.random() - 0.5) * 180;
+        const lng = (Math.random() - 0.5) * 360;
+        const dataType = dataTypes[Math.floor(Math.random() * dataTypes.length)];
+        const value = Math.random() * 100;
+        const description = `${dataType.name} observation at ${lat.toFixed(2)}°, ${lng.toFixed(2)}°`;
+        
+        addDataPoint(lat, lng, dataType, value, description);
+    }
+    
+    function addSampleData() {
+        // Add some realistic sample locations
+        const samplePoints = [
+            { lat: 40.7128, lng: -74.0060, type: 'Air Quality', desc: 'New York City monitoring station' },
+            { lat: 51.5074, lng: -0.1278, type: 'Bird Sighting', desc: 'Urban bird observation in London' },
+            { lat: 35.6762, lng: 139.6503, type: 'Light Pollution', desc: 'Tokyo light pollution measurement' },
+            { lat: -33.8688, lng: 151.2093, type: 'Marine Life', desc: 'Sydney harbor marine survey' },
+            { lat: 48.8566, lng: 2.3522, type: 'Noise Level', desc: 'Paris urban noise monitoring' }
+        ];
+        
+        samplePoints.forEach(point => {
+            const dataType = dataTypes.find(t => t.name === point.type) || dataTypes[0];
+            const value = Math.random() * 100;
+            addDataPoint(point.lat, point.lng, dataType, value, point.desc);
+        });
+    }
+    
+    function clearDatapoints() {
+        dataPoints.forEach(point => {
+            globeGroup.remove(point);
+        });
+        dataPoints = [];
+        document.getElementById('pointCount').textContent = '0';
+        hideInfoPanel();
+    }
+    
+    function toggleAutoRotate() {
+        autoRotate = !autoRotate;
+    }
+    
+    function updatePointSize() {
+        const size = parseFloat(document.getElementById('pointSize').value);
+        document.getElementById('sizeValue').textContent = size.toFixed(1);
+        
+        dataPoints.forEach(point => {
+            point.scale.setScalar(size);
+        });
+    }
+    
+    function updateRotationSpeed() {
+        const speed = parseFloat(document.getElementById('rotationSpeed').value);
+        document.getElementById('speedValue').textContent = speed.toFixed(1);
+        rotationSpeed = speed * 0.005;
+    }
+    
+    function onMouseClick(event) {
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(dataPoints);
+        
+        if (intersects.length > 0) {
+            const point = intersects[0].object;
+            showInfoPanel(point.userData);
+        } else {
+            hideInfoPanel();
+        }
+    }
+    
+    function onMouseMove(event) {
+        if (event.buttons === 1) { // Left mouse button
+            const deltaX = event.movementX;
+            const deltaY = event.movementY;
+            
+            // Rotate the entire globe group (globe + datapoints together)
+            globeGroup.rotation.y += deltaX * 0.01;
+            globeGroup.rotation.x += deltaY * 0.01;
+        }
+    }
+    
+    function showInfoPanel(data) {
+        const panel = document.getElementById('info-panel');
+        const info = document.getElementById('pointInfo');
+        
+        info.innerHTML = `
+            <h4>${data.dataType.name}</h4>
+            <p><strong>Location:</strong> ${data.lat.toFixed(4)}°, ${data.lng.toFixed(4)}°</p>
+            <p><strong>Category:</strong> ${data.dataType.category}</p>
+            <p><strong>Value:</strong> ${data.value.toFixed(2)}</p>
+            <p><strong>Description:</strong> ${data.description}</p>
+            ${data.researcherName ? `<p><strong>Researcher:</strong> ${data.researcherName}</p>` : ''}
+            <p><strong>Recorded:</strong> ${data.timestamp.toLocaleString()}</p>
+        `;
+        
+        panel.style.display = 'block';
+    }
+    
+    function showAddDataModal() {
+        document.getElementById('add-data-modal').style.display = 'flex';
+    }
+    
+    function hideAddDataModal() {
+        document.getElementById('add-data-modal').style.display = 'none';
+    }
+    
+    function submitDataPoint() {
+        const lat = parseFloat(document.getElementById('data-lat').value);
+        const lng = parseFloat(document.getElementById('data-lng').value);
+        const typeIndex = parseInt(document.getElementById('data-type').value);
+        const value = parseFloat(document.getElementById('data-value').value);
+        const description = document.getElementById('data-description').value;
+        const researcherName = document.getElementById('researcher-name').value;
+        
+        if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+            alert('Please enter valid coordinates (Lat: -90 to 90, Lng: -180 to 180)');
+            return;
+        }
+        
+        if (isNaN(value)) {
+            alert('Please enter a valid measurement value');
+            return;
+        }
+        
+        const dataType = dataTypes[typeIndex];
+        addDataPoint(lat, lng, dataType, value, description, researcherName);
+        
+        // Clear form
+        document.getElementById('data-description').value = '';
+        document.getElementById('researcher-name').value = '';
+        
+        hideAddDataModal();
+    }
+    
+    function hideInfoPanel() {
+        document.getElementById('info-panel').style.display = 'none';
+    }
+    
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+    
+    function animate() {
+        requestAnimationFrame(animate);
+        
+        if (autoRotate) {
+            // Rotate the entire globe group (globe + datapoints together)
+            globeGroup.rotation.y += rotationSpeed;
+        }
+        
+        renderer.render(scene, camera);
+    }
+    
+    // Expose functions for external use
+    window.globeAPI = {
+        addDataPoint: addDataPoint,
+        clearDatapoints: clearDatapoints,
+        getDataPoints: () => dataPoints.map(p => p.userData),
+        setRotationSpeed: (speed) => {
+            rotationSpeed = speed;
+            document.getElementById('rotationSpeed').value = speed / 0.005;
+            updateRotationSpeed();
+        }
+    };
+</script>
+```
+
+</body>
+</html>
