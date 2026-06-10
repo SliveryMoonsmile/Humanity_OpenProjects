@@ -1,0 +1,171 @@
+let globe;
+let stars = [];
+let rotationY = 0;
+let rotationX = 0;
+
+function setup() {
+createCanvas(800, 600, WEBGL);
+
+// Create starfield
+for (let i = 0; i < 200; i++) {
+stars.push({
+x: random(-width * 2, width * 2),
+y: random(-height * 2, height * 2),
+z: random(-1000, 200),
+size: random(1, 3)
+});
+}
+}
+
+function draw() {
+background(5, 10, 25);
+
+// Draw stars
+push();
+noStroke();
+fill(255, 255, 255, 150);
+for (let star of stars) {
+push();
+translate(star.x, star.y, star.z);
+sphere(star.size);
+pop();
+}
+pop();
+
+// Lighting setup
+ambientLight(30, 30, 50);
+directionalLight(255, 255, 200, -1, 0.5, -1);
+pointLight(100, 150, 255, 300, -200, 200);
+
+// Globe transformation
+push();
+rotateX(rotationX);
+rotateY(rotationY);
+
+// Create textured globe effect
+strokeWeight(0.5);
+stroke(100, 150, 255, 100);
+
+// Draw multiple sphere layers for texture effect
+for (let layer = 0; layer < 3; layer++) {
+push();
+
+```
+if (layer === 0) {
+  // Main globe - land masses
+  fill(34, 139, 34, 200);
+  noStroke();
+} else if (layer === 1) {
+  // Ocean layer
+  fill(25, 25, 112, 150);
+  stroke(65, 105, 225, 50);
+  strokeWeight(0.3);
+} else {
+  // Atmosphere layer
+  fill(135, 206, 235, 30);
+  stroke(173, 216, 230, 80);
+  strokeWeight(0.2);
+}
+
+let radius = 120 + layer * 5;
+sphere(radius);
+pop();
+
+```
+
+}
+
+// Add continent-like texture using noise
+push();
+fill(139, 69, 19, 180);
+noStroke();
+
+for (let i = 0; i < 50; i++) {
+let phi = random(TWO_PI);
+let theta = random(PI);
+let r = 121;
+
+```
+let x = r * sin(theta) * cos(phi);
+let y = r * sin(theta) * sin(phi);
+let z = r * cos(theta);
+
+push();
+translate(x, y, z);
+
+let noiseVal = noise(x * 0.01, y * 0.01, z * 0.01 + frameCount * 0.005);
+if (noiseVal > 0.4) {
+  sphere(random(3, 8));
+}
+pop();
+
+```
+
+}
+pop();
+
+// Add grid lines for sci-fi effect
+push();
+stroke(0, 255, 255, 100);
+strokeWeight(0.5);
+noFill();
+
+for (let lat = -90; lat <= 90; lat += 30) {
+push();
+rotateX(radians(lat));
+circle(0, 0, 250);
+pop();
+}
+
+for (let lon = 0; lon < 360; lon += 30) {
+push();
+rotateY(radians(lon));
+rotateX(PI/2);
+circle(0, 0, 250);
+pop();
+}
+pop();
+
+pop();
+
+// Update rotation
+rotationY += 0.005;
+rotationX = sin(frameCount * 0.003) * 0.1;
+
+// Add orbital ring
+push();
+rotateY(rotationY * 2);
+rotateX(PI/4);
+stroke(255, 215, 0, 150);
+strokeWeight(2);
+noFill();
+circle(0, 0, 300);
+
+// Add some orbital particles
+for (let i = 0; i < 8; i++) {
+let angle = (frameCount * 0.02 + i * PI/4) % TWO_PI;
+let x = cos(angle) * 150;
+let z = sin(angle) * 150;
+
+```
+push();
+translate(x, 0, z);
+fill(255, 215, 0, 200);
+noStroke();
+sphere(2);
+pop();
+
+```
+
+}
+pop();
+}
+
+function mouseMoved() {
+// Interactive rotation based on mouse position
+let targetRotX = map(mouseY, 0, height, -0.3, 0.3);
+let targetRotY = map(mouseX, 0, width, -0.3, 0.3);
+
+rotationX = lerp(rotationX, targetRotX, 0.05);
+rotationY += (targetRotY - rotationY) * 0.02;
+}
